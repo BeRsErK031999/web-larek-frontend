@@ -9,11 +9,12 @@ import { Basket } from './components/basket';
 import { API_URL, CDN_URL } from './utils/constants';
 import { cloneTemplate, createElement, ensureElement } from './utils/utils';
 import { IOrder, IOrderForm, IProduct } from './types';
-// import { Contacts } from './components/contacts';
 import { Modal } from './components/modal';
+// import { Contacts } from './components/contacts';
 // import { Success } from './components/Success';
 // import { Order } from './components/order';
 
+// Получение шаблонов из HTML документа через утилиту для обеспечения безопасности типов.
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
@@ -25,7 +26,7 @@ const appData = new AppState({}, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 
-
+// Запрос продуктов через API и обработка полученных данных.
 api.getProducts()
   .then(products => {
     events.emit('items:changed', products);
@@ -34,6 +35,7 @@ api.getProducts()
     console.error(err);
   });
 
+  // Обработка события изменения списка товаров.
 events.on('items:changed', (products: IProduct[]) => {
 	page.catalog = products.map((item) => {
 		const card = new Card(cloneTemplate(cardCatalogTemplate), {
@@ -48,50 +50,3 @@ events.on('items:changed', (products: IProduct[]) => {
 	});
 });
 
-events.on('item:select', (item: IProduct) => {
-  const card = new Card(cloneTemplate(cardPreviewTemplate), {
-    onClick: () => {
-      events.emit(appData.getButtonName(item.title) === 'Купить' ? 'item:add' : 'item:remove', item);
-    }
-  });
-  card.render({
-    category: item.category,
-    title: item.title,
-    description: item.description,
-    image: item.image,
-    price: item.price,
-    button: appData.getButtonName(item.title),
-  });
-});
-
-events.on('item:add', (item: IProduct) => {
-  appData.addBasketList(item);
-  events.emit('basket:changed');
-});
-
-events.on('item:remove', (item: IProduct) => {
-  appData.changeBasketList(item.id);
-  events.emit('basket:changed');
-});
-
-events.on('basket:changed', () => {
-	basket.items = appData.basketList.map(
-		(item: { title: string; price: number }, index) => {
-			const card = new Card(cloneTemplate(basketItemTemplate), {
-				onClick: () => events.emit('item:remove', item),
-			});
-			return card.render({
-				title: item.title,
-				price: item.price,
-				index: index + 1,
-			});
-		}
-	);
-  basket.total = `${appData.getTotalPrice()} синапсов`;
-});
-
-
-events.on('basket:open', () => {
-  basket.items = [];
-  appData.clearBasket();
-});
