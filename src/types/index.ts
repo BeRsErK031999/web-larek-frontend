@@ -10,7 +10,7 @@ export interface IOrderForm {
     items: string[];
   }
   
-  //data
+  
   export interface IAppState {
     catalog: IProduct[];
     basketList: IProduct[];
@@ -19,18 +19,18 @@ export interface IOrderForm {
     loading: boolean;
   }
   
-  //promise
+  
   export interface ILarekApi {
     getProducts: () => Promise<IProduct[]>;
     makeOrder: (value: IOrder) => Promise<IOrder>;
   }
   
-  //события
+ 
   export interface ICardActions {
     onClick: (event: MouseEvent) => void;
   }
   
-  //product
+  
   export interface IProduct {
     id: string;
     description?: string;
@@ -40,6 +40,6 @@ export interface IOrderForm {
     price: number | null;
   }
   
-  //forms errors
+ 
   export type FormErrors = Partial<Record<keyof IOrder, string>>;
   
