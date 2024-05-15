@@ -7,7 +7,8 @@ import { Page } from './components/page';
 import { EventEmitter } from './components/base/events';
 import { Basket } from './components/basket';
 import { Order } from './components/order';
-// import { Contact } from './components/contacts';
+import { Contacts } from './components/contacts';
+import { PaymentSuccess } from './components/paymentSuccess';
 import { API_URL, CDN_URL } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { IOrder, IProduct } from './types';
@@ -20,6 +21,7 @@ const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
 const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const basketItemTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const paymentSuccessTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 console.log('Templates loaded:', {
   cardCatalogTemplate,
@@ -27,7 +29,8 @@ console.log('Templates loaded:', {
   cardPreviewTemplate,
   orderTemplate,
   contactsTemplate,
-  basketItemTemplate
+  basketItemTemplate,
+  paymentSuccessTemplate
 });
 
 const events = new EventEmitter();
@@ -37,7 +40,6 @@ const appData = new AppState({}, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const order = new Order(cloneTemplate(orderTemplate), events);
-
 
 api.getProducts()
   .then(products => {
@@ -107,9 +109,33 @@ events.on('order:open', () => {
   console.log('Order modal opened');
 });
 
+events.on('order:nextStep', () => {
+  const contactsForm = cloneTemplate(contactsTemplate);
+  const contacts = new Contacts(contactsForm, events);
+  modal.setContent(contacts.render());
+  modal.open();
+  console.log('Contacts form opened');
+});
+
 events.on('order:paymentSelected', (event: { method: string }) => {
   const { method } = event;
   console.log(`Payment method selected: ${method}`);
+});
+
+events.on('contacts:submitted', (data: { email: string, phone: string }) => {
+  console.log('Contacts form submitted with data:', data);
+  // Display the payment success modal
+  const paymentSuccessElement = cloneTemplate(paymentSuccessTemplate);
+  const paymentSuccess = new PaymentSuccess(paymentSuccessElement, events);
+  modal.setContent(paymentSuccess.render());
+  modal.open();
+  console.log('Payment success modal opened');
+});
+
+events.on('payment:successClosed', () => {
+  modal.close();
+  console.log('Payment success modal closed');
+  // Here you can reset the form, update the UI, or take any other action needed after successful payment
 });
 
 const basketButton = ensureElement<HTMLElement>('.header__basket');
