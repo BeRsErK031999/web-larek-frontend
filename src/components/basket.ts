@@ -25,7 +25,7 @@ export class Basket extends Component<IBasketView> {
     this._total = ensureElement<HTMLElement>('.basket__price', this.container);
     this._button = ensureElement<HTMLElement>('.basket__button', this.container);
 
-     // Назначение обработчика клика на кнопку, если она найдена.
+    // Назначение обработчика клика на кнопку, если она найдена.
     if (this._button) {
       this._button.addEventListener('click', () => {
         events.emit('order:open');
@@ -51,7 +51,7 @@ export class Basket extends Component<IBasketView> {
           <span class="basket__item-index">${index + 1}</span>
           <span class="card__title">${product.title}</span>
           <span class="card__price">${product.price > 0 ? `${product.price} синапсов` : 'Бесценно'}</span>
-          <button class="basket__item-delete" aria-label="удалить">Удалить</button>
+          <button class="basket__item-delete" aria-label="удалить"></button>
         `
       });
       itemElement.querySelector('.basket__item-delete')?.addEventListener('click', () => {
@@ -106,5 +106,11 @@ export class Basket extends Component<IBasketView> {
   // Сеттер для обновления отображаемой общей суммы.
   set total(total: string) {
     this.setText(this._total, total);
+  }
+
+  // Метод для очистки корзины
+  clear() {
+    this.products = [];
+    this.updateView();
   }
 }

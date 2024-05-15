@@ -12,7 +12,7 @@ export interface ICard {
 }
 
 interface ICardActions {
-  onClick: (event: MouseEvent) => void; // Функция обработки клика по карточке
+  onClick: (event: MouseEvent) => void; // Function to handle card click
 }
 
 type CategoryKey = 'софт-скил' | 'другое' | 'хард-скил' | 'дополнительное' | 'кнопка';
@@ -40,7 +40,6 @@ export class Card extends Component<ICard> {
     this.attachEvents(actions);
   }
 
-  // Метод для назначения обработчиков событий.
   private attachEvents(actions?: ICardActions): void {
     if (actions?.onClick && this.buttonElement) {
       this.buttonElement.addEventListener('click', actions.onClick);
@@ -51,14 +50,12 @@ export class Card extends Component<ICard> {
     }
   }
 
-  // Утилитарный метод для безопасного получения элементов из DOM.
   private getElement<T extends HTMLElement>(selector: string): T {
     const element = this.container.querySelector(selector) as T;
     console.log(`Element ${selector} fetched:`, element);
     return element;
   }
 
-  // Утилитарный метод для обновления текста элемента.
   private updateElement(element: HTMLElement | undefined, value: string | number, suffix?: string): void {
     if (element) {
       element.textContent = `${value}${suffix || ''}`;
@@ -66,7 +63,6 @@ export class Card extends Component<ICard> {
     }
   }
 
-  // Геттер и сеттер для свойства title.
   get title(): string {
     return this.titleElement.textContent || '';
   }
@@ -75,12 +71,10 @@ export class Card extends Component<ICard> {
     this.updateElement(this.titleElement, value);
   }
 
-  // Геттер для получения элемента заголовка, используя ensureElement.
   get titleElement(): HTMLElement {
     return this._title || (this._title = ensureElement<HTMLElement>('.card__title', this.container));
   }
 
-  // Геттер и сеттер для свойства price.
   get price(): number {
     return parseFloat(this.priceElement.textContent || '0');
   }
@@ -90,55 +84,47 @@ export class Card extends Component<ICard> {
     this.updateElement(this.priceElement, priceText);
   }
 
-  // Геттер для получения элемента цены, используя ensureElement.
   get priceElement(): HTMLElement {
     return this._price || (this._price = ensureElement<HTMLElement>('.card__price', this.container));
   }
 
-  // Сеттер для категории, применяет соответствующий CSS класс.
   set category(value: CategoryKey) {
     const className = this.categoryClasses[value];
     if (className && this.categoryElement) {
       this.categoryElement.className = ''; // Clear existing classes
-      this.categoryElement.classList.add(className);
+      this.categoryElement.classList.add('card__category', className);
     }
     this.updateElement(this.categoryElement, value);
   }
 
-  // Геттер для получения элемента категории, используя ensureElement.
   get categoryElement(): HTMLElement {
     return this._category || (this._category = ensureElement<HTMLElement>('.card__category', this.container));
   }
 
-  // Сеттер для свойства image, обновляет атрибуты src и alt изображения.
   set image(value: string) {
-    if (this._image) {
-      this._image.src = value;
-      this._image.alt = this.title;
+    if (this.imageElement) {
+      this.imageElement.src = value;
+      this.imageElement.alt = this.title;
+      console.log('Image updated:', this.imageElement.src);
     }
   }
 
-  // Геттер для получения элемента изображения, используя getElement.
   get imageElement(): HTMLImageElement {
     return this._image || (this._image = this.getElement<HTMLImageElement>('.card__image'));
   }
 
-  // Сеттер для свойства button, обновляет текст кнопки.
   set button(value: string) {
     this.updateElement(this.buttonElement, value);
   }
 
-  // Геттер для получения элемента кнопки, используя getElement.
   get buttonElement(): HTMLButtonElement {
     return this._button || (this._button = this.getElement<HTMLButtonElement>('.card__button'));
   }
 
-  // Сеттер для свойства description, обновляет текст описания.
   set description(value: string) {
     this.updateElement(this.descriptionElement, value);
   }
 
-  // Геттер для получения элемента описания, используя ensureElement.
   get descriptionElement(): HTMLElement {
     return this._description || (this._description = ensureElement<HTMLElement>('.card__description', this.container));
   }
@@ -148,8 +134,16 @@ export class Card extends Component<ICard> {
     this.title = data.title;
     this.price = data.price;
     this.category = data.category as CategoryKey;
-    this.image = data.image || '';
+    if (data.image) {
+      this.image = data.image;
+    }
     this.description = data.description;
+
+    // Hide the description element for the overview view
+    if (this.descriptionElement) {
+      this.descriptionElement.style.display = 'none';
+    }
+    
     return this.container;
   }
 }

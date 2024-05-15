@@ -5,8 +5,8 @@ import { IEvents } from "./base/events";
 // Определение интерфейса для данных, которые использует модальное окно.
 interface IModalData {
     content: HTMLElement;
-  }
-  
+}
+
 // Определение класса Modal, который расширяет базовый класс Component, параметризованный типом IModalData.
 export class Modal extends Component<IModalData> {
   protected _closeButton: HTMLButtonElement;
@@ -27,6 +27,16 @@ export class Modal extends Component<IModalData> {
     this._content.addEventListener('click', (event) => event.stopPropagation());
   }
 
+  // Метод для блокировки скролла страницы.
+  private lockScroll() {
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Метод для разблокировки скролла страницы.
+  private unlockScroll() {
+    document.body.style.overflow = 'auto';
+  }
+
   // Сеттер для изменения содержимого модального окна.
   set content(value: HTMLElement) {
     this._content.replaceChildren(value);
@@ -35,6 +45,7 @@ export class Modal extends Component<IModalData> {
   // Метод для открытия модального окна.
   open() {
     this.container.classList.add('modal_active'); // Добавление класса для активации видимости.
+    this.lockScroll(); // Блокировка скролла страницы.
     this.events.emit('modal:open'); // Генерация события открытия.
   }
 
@@ -42,6 +53,7 @@ export class Modal extends Component<IModalData> {
   close() {
     this.container.classList.remove('modal_active'); // Удаление класса, делающего окно видимым.
     this.content = null; // Очистка содержимого.
+    this.unlockScroll(); // Разблокировка скролла страницы.
     this.events.emit('modal:close'); // Генерация события закрытия.
   }
 

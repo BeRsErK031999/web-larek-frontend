@@ -14,6 +14,9 @@ import { cloneTemplate, ensureElement } from './utils/utils';
 import { IOrder, IProduct } from './types';
 import { Modal } from './components/modal';
 
+// Define CategoryKey type
+type CategoryKey = 'софт-скил' | 'другое' | 'хард-скил' | 'дополнительное' | 'кнопка';
+
 // Получение шаблонов из HTML документа через утилиту для обеспечения безопасности типов.
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
@@ -81,6 +84,7 @@ events.on('item:select', (item: IProduct) => {
   const imageElement = ensureElement<HTMLImageElement>('.card__image', previewElement);
   const priceElement = ensureElement<HTMLElement>('.card__price', previewElement);
   const categoryElement = ensureElement<HTMLElement>('.card__category', previewElement);
+  const textElement = ensureElement<HTMLElement>('.card__text', previewElement);
   const descriptionElement = ensureElement<HTMLElement>('.card__description', previewElement);
   const buttonElement = ensureElement<HTMLButtonElement>('.card__button', previewElement);
 
@@ -89,12 +93,28 @@ events.on('item:select', (item: IProduct) => {
   imageElement.alt = item.title;
   priceElement.textContent = item.price > 0 ? `${item.price} синапсов` : 'Бесценно';
   categoryElement.textContent = item.category;
+  categoryElement.className = ''; // Clear existing classes
+
+  const categoryClasses: Record<CategoryKey, string> = {
+    'софт-скил': 'card__category_soft',
+    'другое': 'card__category_other',
+    'хард-скил': 'card__category_hard',
+    'дополнительное': 'card__category_additional',
+    'кнопка': 'card__category_button',
+  };
+
+  const categoryClass = categoryClasses[item.category as CategoryKey] || '';
+  categoryElement.classList.add('card__category', categoryClass);
+
+  // Hide card__text and show card__description
+  textElement.style.display = 'none';
   descriptionElement.textContent = item.description;
+  descriptionElement.style.display = 'block';
 
   buttonElement.textContent = 'Купить';
   buttonElement.addEventListener('click', () => {
     basket.addProduct(item);
-    modal.close();
+    modal.close(); // Close the modal after adding the product
     console.log('Product added to basket:', item);
   });
 
@@ -124,18 +144,18 @@ events.on('order:paymentSelected', (event: { method: string }) => {
 
 events.on('contacts:submitted', (data: { email: string, phone: string }) => {
   console.log('Contacts form submitted with data:', data);
-  // Display the payment success modal
   const paymentSuccessElement = cloneTemplate(paymentSuccessTemplate);
   const paymentSuccess = new PaymentSuccess(paymentSuccessElement, events);
-  modal.setContent(paymentSuccess.render());
+  const totalAmount = basket.calculateTotal(); // Calculate the total amount
+  modal.setContent(paymentSuccess.render({ total: totalAmount }));
   modal.open();
+  basket.clear(); // Clear the basket after order is placed
   console.log('Payment success modal opened');
 });
 
 events.on('payment:successClosed', () => {
   modal.close();
   console.log('Payment success modal closed');
-  // Here you can reset the form, update the UI, or take any other action needed after successful payment
 });
 
 const basketButton = ensureElement<HTMLElement>('.header__basket');
