@@ -14,16 +14,18 @@ export class Basket extends Component<IBasketView> {
   protected _list: HTMLElement;    // DOM элемент списка товаров.
   protected _total: HTMLElement;   // DOM элемент для отображения общей суммы.
   protected _button: HTMLElement;  // Кнопка для совершения заказа.
+  protected _counter: HTMLElement; // DOM элемент счетчика товаров.
 
   private products: IProduct[] = [];
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
 
-    // Поиск и сохранение элементов списка, итоговой суммы и кнопки в корзине.
+    // Поиск и сохранение элементов списка, итоговой суммы, кнопки и счетчика в корзине.
     this._list = ensureElement<HTMLElement>('.basket__list', this.container);
     this._total = ensureElement<HTMLElement>('.basket__price', this.container);
     this._button = ensureElement<HTMLElement>('.basket__button', this.container);
+    this._counter = ensureElement<HTMLElement>('.header__basket-counter', document.body);
 
     // Назначение обработчика клика на кнопку, если она найдена.
     if (this._button) {
@@ -50,7 +52,7 @@ export class Basket extends Component<IBasketView> {
         innerHTML: `
           <span class="basket__item-index">${index + 1}</span>
           <span class="card__title">${product.title}</span>
-          <span class="card__price">${product.price > 0 ? `${product.price} синапсов` : 'Бесценно'}</span>
+          <span class="card__price">${product.price !== null ? `${product.price} синапсов` : 'Бесценно'}</span>
           <button class="basket__item-delete" aria-label="удалить"></button>
         `
       });
@@ -62,6 +64,7 @@ export class Basket extends Component<IBasketView> {
 
     this.items = items;
     this.total = this.calculateTotal();
+    this.updateCounter();
   }
 
   // Метод для удаления продукта из корзины
@@ -71,9 +74,8 @@ export class Basket extends Component<IBasketView> {
   }
 
   // Метод для вычисления общей суммы
-  calculateTotal(): string {
-    const total = this.products.reduce((sum, product) => sum + (product.price || 0), 0);
-    return `${total} синапсов`;
+  calculateTotal(): number {
+    return this.products.reduce((sum, product) => sum + (product.price || 0), 0);
   }
 
   // Сеттер для управления элементами корзины.
@@ -104,13 +106,29 @@ export class Basket extends Component<IBasketView> {
   }
 
   // Сеттер для обновления отображаемой общей суммы.
-  set total(total: string) {
-    this.setText(this._total, total);
+  set total(total: number) {
+    this.setText(this._total, `${total} синапсов`);
   }
 
   // Метод для очистки корзины
   clear() {
     this.products = [];
     this.updateView();
+  }
+
+  // Метод для получения общей стоимости
+  getTotalPrice(): number {
+    return this.calculateTotal();
+  }
+
+  // Метод для получения продуктов из корзины
+  getProducts(): IProduct[] {
+    return this.products;
+  }
+
+  // Метод для обновления счетчика товаров в корзине
+  updateCounter() {
+    const count = this.products.length;
+    this.setText(this._counter, String(count));
   }
 }

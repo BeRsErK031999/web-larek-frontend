@@ -17,4 +17,12 @@
     @include mixins.button(white, $primaryLight, $primaryLight);
     border: $hoverBorder;
   }
+
+  // Add styles for selected payment method button
+  &.selected {
+    border: $hoverBorder;
+    &:hover {
+      border: $hoverBorder;
+    }
+  }
 }

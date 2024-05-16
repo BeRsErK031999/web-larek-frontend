@@ -11,6 +11,7 @@ interface IModalData {
 export class Modal extends Component<IModalData> {
   protected _closeButton: HTMLButtonElement;
   protected _content: HTMLElement;
+  private _scrollTop: number = 0;
 
   // Конструктор класса Modal.
   constructor(container: HTMLElement, protected events: IEvents) {
@@ -29,12 +30,18 @@ export class Modal extends Component<IModalData> {
 
   // Метод для блокировки скролла страницы.
   private lockScroll() {
-    document.body.style.overflow = 'hidden';
+    this._scrollTop = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${this._scrollTop}px`;
+    document.body.style.width = '100%';
   }
 
   // Метод для разблокировки скролла страницы.
   private unlockScroll() {
-    document.body.style.overflow = 'auto';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, this._scrollTop);
   }
 
   // Сеттер для изменения содержимого модального окна.

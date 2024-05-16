@@ -69,13 +69,23 @@ yarn build
 -close() - закрытие модального окна
 -render(data: null): HTMLElement - рендеринг модального окна
 
-#### Класс `Card`
-Представление карточки товара.
+#### Класс `CatalogCard`
+Представление карточки товара в каталоге.
 - Методы для настройки и отображения деталей товара.
--attachEvents(actions?: ICardActions) - назначение обработчиков событий
--getElement<T extends HTMLElement>(selector: string): T - получение элемента из DOM
--updateElement(element: HTMLElement | undefined, value: string | number, suffix?: string) - обновление текста элемента
--render(data: ICard): HTMLElement - рендеринг карточки с данными
+-constructor(container: HTMLElement, actions: ICardActions): Инициализация карточки с действиями.
+-render(data: IProduct): HTMLElement: Рендеринг карточки с данными.
+
+#### Класс `PreviewCard`
+Представление карточки товара в модальном окне предварительного просмотра.
+- Методы для настройки и отображения деталей товара.
+-constructor(container: HTMLElement, onAddToBasket: () => void): Инициализация карточки с действием добавления в корзину.
+-render(data: IProduct): HTMLElement: Рендеринг карточки с данными.
+
+#### Класс `BasketCard`
+Представление карточки товара в модальном окне предварительного просмотра.
+- Методы для настройки и отображения деталей товара.
+-constructor(container: HTMLElement, onDelete: () => void): Инициализация карточки с действием удаления.
+-render(data: IProduct): HTMLElement: Рендеринг карточки с данными.
 
 #### Класс `Basket`
 Управление содержимым корзины покупок.
@@ -134,7 +144,9 @@ yarn build
 ## UML Диаграмма
 'Схема в нотации UML'.drawio.png
 [Component] <|-- [Modal]
-[Component] <|-- [Card]
+[Component] <|-- [CatalogCard]
+[Component] <|-- [PreviewCard]
+[Component] <|-- [BasketCard]
 [Component] <|-- [Basket]
 [Component] <|-- [Order]
 [Component] <|-- [Page]

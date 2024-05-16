@@ -1,14 +1,21 @@
 import { ensureElement } from '../utils/utils';
 import { Component } from './base/component';
 import { IEvents } from './base/events';
+import { IOrder } from '../types';
+import { LarekApi } from './larekApi';
 
 export class Contacts extends Component<null> {
   protected _emailInput: HTMLInputElement;
   protected _phoneInput: HTMLInputElement;
   protected _submitButton: HTMLButtonElement;
+  private api: LarekApi;
+  private orderData: IOrder;
 
-  constructor(container: HTMLElement, protected events: IEvents) {
+  constructor(container: HTMLElement, protected events: IEvents, api: LarekApi, orderData: IOrder) {
     super(container);
+
+    this.api = api;
+    this.orderData = orderData;
 
     this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
     this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
@@ -32,12 +39,21 @@ export class Contacts extends Component<null> {
   }
 
   handleSubmit(event: Event) {
-    event.preventDefault(); // Prevent default form behavior
+    event.preventDefault(); 
     console.log('Contacts form submitted');
-    this.events.emit('contacts:submitted', {
-      email: this._emailInput.value,
-      phone: this._phoneInput.value,
-    });
+    this.orderData.email = this._emailInput.value;
+    this.orderData.phone = this._phoneInput.value;
+    this.submitData(this.orderData);
+  }
+
+  async submitData(data: IOrder) {
+    try {
+      const response = await this.api.submitOrder(data);
+      console.log('Order submitted successfully:', response);
+      this.events.emit('contacts:submitted', data);
+    } catch (error) {
+      console.error('Error submitting order:', error);
+    }
   }
 
   render(): HTMLElement {

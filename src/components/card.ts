@@ -1,5 +1,6 @@
 import { ensureElement } from "../utils/utils";
 import { Component } from './base/component';
+import { IProduct } from '../types';
 
 export interface ICard {
   title: string;
@@ -12,7 +13,7 @@ export interface ICard {
 }
 
 interface ICardActions {
-  onClick: (event: MouseEvent) => void; // Function to handle card click
+  onClick: (event: MouseEvent) => void; 
 }
 
 type CategoryKey = 'софт-скил' | 'другое' | 'хард-скил' | 'дополнительное' | 'кнопка';
@@ -50,33 +51,35 @@ export class Card extends Component<ICard> {
     }
   }
 
-  private getElement<T extends HTMLElement>(selector: string): T {
+  private getElement<T extends HTMLElement>(selector: string): T | null {
     const element = this.container.querySelector(selector) as T;
     console.log(`Element ${selector} fetched:`, element);
     return element;
   }
 
-  private updateElement(element: HTMLElement | undefined, value: string | number, suffix?: string): void {
+  private updateElement(element: HTMLElement | undefined | null, value: string | number, suffix?: string): void {
     if (element) {
       element.textContent = `${value}${suffix || ''}`;
       console.log('Element updated:', element);
+    } else {
+      console.error('Element not found:', element);
     }
   }
 
   get title(): string {
-    return this.titleElement.textContent || '';
+    return this.titleElement?.textContent || '';
   }
 
   set title(value: string) {
     this.updateElement(this.titleElement, value);
   }
 
-  get titleElement(): HTMLElement {
+  get titleElement(): HTMLElement | null {
     return this._title || (this._title = ensureElement<HTMLElement>('.card__title', this.container));
   }
 
   get price(): number {
-    return parseFloat(this.priceElement.textContent || '0');
+    return parseFloat(this.priceElement?.textContent || '0');
   }
 
   set price(value: number) {
@@ -84,20 +87,20 @@ export class Card extends Component<ICard> {
     this.updateElement(this.priceElement, priceText);
   }
 
-  get priceElement(): HTMLElement {
+  get priceElement(): HTMLElement | null {
     return this._price || (this._price = ensureElement<HTMLElement>('.card__price', this.container));
   }
 
   set category(value: CategoryKey) {
     const className = this.categoryClasses[value];
     if (className && this.categoryElement) {
-      this.categoryElement.className = ''; // Clear existing classes
+      this.categoryElement.className = ''; 
       this.categoryElement.classList.add('card__category', className);
     }
     this.updateElement(this.categoryElement, value);
   }
 
-  get categoryElement(): HTMLElement {
+  get categoryElement(): HTMLElement | null {
     return this._category || (this._category = ensureElement<HTMLElement>('.card__category', this.container));
   }
 
@@ -109,7 +112,7 @@ export class Card extends Component<ICard> {
     }
   }
 
-  get imageElement(): HTMLImageElement {
+  get imageElement(): HTMLImageElement | null {
     return this._image || (this._image = this.getElement<HTMLImageElement>('.card__image'));
   }
 
@@ -117,7 +120,7 @@ export class Card extends Component<ICard> {
     this.updateElement(this.buttonElement, value);
   }
 
-  get buttonElement(): HTMLButtonElement {
+  get buttonElement(): HTMLButtonElement | null {
     return this._button || (this._button = this.getElement<HTMLButtonElement>('.card__button'));
   }
 
@@ -125,7 +128,7 @@ export class Card extends Component<ICard> {
     this.updateElement(this.descriptionElement, value);
   }
 
-  get descriptionElement(): HTMLElement {
+  get descriptionElement(): HTMLElement | null {
     return this._description || (this._description = ensureElement<HTMLElement>('.card__description', this.container));
   }
 
@@ -139,11 +142,18 @@ export class Card extends Component<ICard> {
     }
     this.description = data.description;
 
-    // Hide the description element for the overview view
     if (this.descriptionElement) {
       this.descriptionElement.style.display = 'none';
     }
     
     return this.container;
+  }
+
+  toggleButtonText(isInBasket: boolean) {
+    if (this.buttonElement) {
+      this.buttonElement.textContent = isInBasket ? 'Убрать' : 'Купить';
+    } else {
+      console.error('Button element not found');
+    }
   }
 }

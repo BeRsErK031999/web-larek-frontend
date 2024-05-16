@@ -11,26 +11,16 @@ export class AppState extends Model<IAppState> {
     phone: '',
     total: 0,
     items: []
-  }
+  };
 
-  buttonName: 'Купить' | 'Убрать';
-  formErrors: FormErrors = {};
-
-  getButtonName(value: string): string {
-    if (this.basketList.some(obj => obj.title === value)) {
-      this.buttonName = 'Убрать';
-    } else {
-      this.buttonName = 'Купить';
-    }
-    return this.buttonName;
-  }
+  formErrors: FormErrors = {};  
 
   getTotal() {
     return this.basketList.length;
   }
 
   getTotalPrice() {
-    return this.basketList.reduce((sum, item) => sum + item.price, 0);
+    return this.basketList.reduce((sum, item) => sum + (item.price || 0), 0);
   }
 
   setCatalog(items: IProduct[]) {
@@ -46,7 +36,7 @@ export class AppState extends Model<IAppState> {
       phone: '',
       total: 0,
       items: []
-    }
+    };
   }
 
   clearBasket() {
@@ -54,11 +44,11 @@ export class AppState extends Model<IAppState> {
   }
 
   addBasketList(item: IProduct) {
-    this.basketList = [item, ...this.basketList];
+    this.basketList.push(item); 
   }
 
   getBasketList(): IProduct[] {
-    return this.basketList
+    return this.basketList;
   }
 
   changeBasketList(id: string) {
@@ -67,11 +57,17 @@ export class AppState extends Model<IAppState> {
 
   setOrderItems() {
     this.order.items = this.basketList.map(item => item.id);
-    this.order.total = this.getTotalPrice();
+    this.order.total = this.getTotalPrice(); 
   }
 
-  setOrderField(field: keyof IOrderForm, value: string) {
-    this.order[field] = value;
+  setOrderField(field: keyof IOrderForm | 'items', value: string | number | string[]) { // Allow string[] for items
+    if (field === 'items') {
+      this.order.items = value as string[]; 
+    } else if (field === 'total') {
+      this.order.total = value as number; 
+    } else {
+      this.order[field] = value as string;
+    }
 
     if (this.validateOrder()) {
       this.events.emit('order:ready', this.order);
@@ -79,7 +75,11 @@ export class AppState extends Model<IAppState> {
   }
 
   setContactsField(field: keyof IOrderForm, value: string) {
-    this.order[field] = value;
+    if (field === 'total') {
+      this.order[field] = Number(value); 
+    } else {
+      this.order[field] = value;
+    }
 
     if (this.validateContacts()) {
       this.events.emit('contacts:ready', this.order);
@@ -95,27 +95,30 @@ export class AppState extends Model<IAppState> {
     if (!this.order.payment) {
       errors.payment = 'Необходимо указать способ оплаты';
     }
-    
+
     this.formErrors = errors;
     this.events.emit('formErrors:change', this.formErrors);
 
-    
     return Object.keys(errors).length === 0;
   }
 
   validateContacts() {
     const errors: typeof this.formErrors = {};
-    
+
     if (!this.order.email) {
-        errors.email = 'Необходимо указать email';
+      errors.email = 'Необходимо указать email';
     }
 
     if (!this.order.phone) {
-        errors.phone = 'Необходимо указать телефон';
+      errors.phone = 'Необходимо указать телефон';
     }
 
     this.formErrors = errors;
     this.events.emit('formErrors:change', this.formErrors);
     return Object.keys(errors).length === 0;
+  }
+
+  getOrder(): IOrder {
+    return this.order;
   }
 }
