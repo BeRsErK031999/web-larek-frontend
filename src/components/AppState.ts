@@ -44,7 +44,8 @@ export class AppState extends Model<IAppState> {
   }
 
   addBasketList(item: IProduct) {
-    this.basketList.push(item); 
+    this.basketList.push(item);
+    this.emitChanges('basket:updated', this.basketList);
   }
 
   getBasketList(): IProduct[] {
@@ -53,18 +54,19 @@ export class AppState extends Model<IAppState> {
 
   changeBasketList(id: string) {
     this.basketList = this.basketList.filter(item => item.id !== id);
+    this.emitChanges('basket:updated', this.basketList);
   }
 
   setOrderItems() {
     this.order.items = this.basketList.map(item => item.id);
-    this.order.total = this.getTotalPrice(); 
+    this.order.total = this.getTotalPrice();
   }
 
-  setOrderField(field: keyof IOrderForm | 'items', value: string | number | string[]) { // Allow string[] for items
+  setOrderField(field: keyof IOrderForm | 'items', value: string | number | string[]) {
     if (field === 'items') {
-      this.order.items = value as string[]; 
+      this.order.items = value as string[];
     } else if (field === 'total') {
-      this.order.total = value as number; 
+      this.order.total = value as number;
     } else {
       this.order[field] = value as string;
     }
@@ -76,7 +78,7 @@ export class AppState extends Model<IAppState> {
 
   setContactsField(field: keyof IOrderForm, value: string) {
     if (field === 'total') {
-      this.order[field] = Number(value); 
+      this.order[field] = Number(value);
     } else {
       this.order[field] = value;
     }

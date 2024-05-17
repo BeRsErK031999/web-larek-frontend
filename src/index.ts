@@ -14,6 +14,7 @@ import { IOrder, IProduct } from './types';
 import { Modal } from './components/modal';
 import { PreviewCard } from './components/previewCard';
 
+// Define CategoryKey type
 type CategoryKey = 'софт-скил' | 'другое' | 'хард-скил' | 'дополнительное' | 'кнопка';
 
 // Получение шаблонов из HTML документа через утилиту для обеспечения безопасности типов.
@@ -41,7 +42,19 @@ const api = new LarekApi(CDN_URL, API_URL);
 const appData = new AppState({}, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
-const order = new Order(cloneTemplate(orderTemplate), events);
+const orderComponent = new Order(cloneTemplate(orderTemplate), events);
+
+// Обновляем счетчик корзины при каждом изменении
+events.on('basket:updated', (products: IProduct[]) => {
+  const basketCounter = ensureElement<HTMLElement>('.header__basket-counter');
+  basketCounter.textContent = String(products.length);
+});
+
+// Обновляем счетчик корзины после очистки
+events.on('basket:cleared', () => {
+  const basketCounter = ensureElement<HTMLElement>('.header__basket-counter');
+  basketCounter.textContent = '0';
+});
 
 api.getProducts()
   .then(products => {
@@ -80,7 +93,7 @@ events.on('order:open', () => {
     total: basket.getTotalPrice(),
     items: basket.getProducts().map((product: IProduct) => product.id)
   };
-  modal.setContent(order.render(orderData));
+  modal.setContent(orderComponent.render(orderData)); // Используем orderComponent
   modal.open();
   console.log('Order modal opened', orderData);
 });
@@ -93,10 +106,26 @@ events.on('order:nextStep', (data: { address: string, payment: string }) => {
   appData.setOrderField('items', basket.getProducts().map((product: IProduct) => product.id));
 
   const contactsForm = cloneTemplate(contactsTemplate);
-  const contacts = new Contacts(contactsForm, events, api, appData.getOrder());
+  const contacts = new Contacts(contactsForm, events);
   modal.setContent(contacts.render());
   modal.open();
   console.log('Contacts form opened');
+});
+
+events.on('contacts:formSubmit', (formData: { email: string, phone: string }) => {
+  console.log('Form data received:', formData);
+  appData.setContactsField('email', formData.email);
+  appData.setContactsField('phone', formData.phone);
+  
+  const orderData = appData.getOrder();
+  api.submitOrder(orderData)
+    .then(response => {
+      console.log('Order submitted successfully:', response);
+      events.emit('contacts:submitted', orderData);
+    })
+    .catch(error => {
+      console.error('Error submitting order:', error);
+    });
 });
 
 events.on('contacts:submitted', (data: IOrder) => {
