@@ -12,7 +12,7 @@ interface IBasketView {
 export class Basket extends Component<IBasketView> {
   protected _list: HTMLElement;
   protected _total: HTMLElement;
-  protected _button: HTMLElement;
+  protected _button: HTMLButtonElement;
 
   private products: IProduct[] = [];
 
@@ -21,7 +21,7 @@ export class Basket extends Component<IBasketView> {
 
     this._list = ensureElement<HTMLElement>('.basket__list', this.container);
     this._total = ensureElement<HTMLElement>('.basket__price', this.container);
-    this._button = ensureElement<HTMLElement>('.basket__button', this.container);
+    this._button = ensureElement<HTMLButtonElement>('.basket__button', this.container);
 
     if (this._button) {
       this._button.addEventListener('click', () => {
@@ -33,6 +33,14 @@ export class Basket extends Component<IBasketView> {
   }
 
   addProduct(product: IProduct) {
+    if (product.price === null || product.price === 0) {
+      const hasNonZeroPriceProduct = this.products.some(p => p.price !== null && p.price > 0);
+      if (!hasNonZeroPriceProduct) {
+        console.log('Cannot add product with zero price unless there is a product with a non-zero price:', product);
+        return;
+      }
+    }
+
     this.products.push(product);
     this.updateView();
     this.events.emit('basket:updated', this.products);
@@ -63,6 +71,10 @@ export class Basket extends Component<IBasketView> {
 
     this.items = items;
     this.total = this.calculateTotal();
+
+    // Toggle the checkout button based on total price
+    const totalPrice = this.calculateTotal();
+    this._button.disabled = totalPrice === 0;
   }
 
   calculateTotal(): number {
@@ -100,7 +112,6 @@ export class Basket extends Component<IBasketView> {
   clear() {
     this.products = [];
     this.updateView();
-    this.events.emit('basket:cleared');
   }
 
   getTotalPrice(): number {

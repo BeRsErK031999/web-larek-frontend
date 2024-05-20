@@ -4,13 +4,7 @@ import { IEvents } from "./base/events";
 import { IProduct } from "../types";
 import { Card } from "./card";
 
-export interface IPage {
-  counter: number;
-  catalog: HTMLElement[];
-  locked: boolean;
-}
-
-export class Page extends Component<IPage> {
+export class Page extends Component<null> {
   protected _counter: HTMLElement;
   protected _catalog: HTMLElement;
   protected _wrapper: HTMLElement;
@@ -26,7 +20,7 @@ export class Page extends Component<IPage> {
 
     this._basket.addEventListener('click', () => {
       this.events.emit('basket:open');
-    })
+    });
   }
 
   set counter(value: number) {

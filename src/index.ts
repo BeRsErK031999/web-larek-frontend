@@ -10,7 +10,7 @@ import { Contacts } from './components/contacts';
 import { PaymentSuccess } from './components/paymentSuccess';
 import { API_URL, CDN_URL } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { IOrder, IProduct } from './types';
+import { IOrder, IProduct, IOrderForm } from './types';
 import { Modal } from './components/modal';
 import { PreviewCard } from './components/previewCard';
 
@@ -85,13 +85,14 @@ events.on('item:select', (item: IProduct) => {
 });
 
 events.on('order:open', () => {
+  const orderProducts = basket.getProducts().filter((product: IProduct) => product.price !== null && product.price !== 0);
   const orderData: IOrder = {
     address: '',
     payment: '',
     email: '',
     phone: '',
-    total: basket.getTotalPrice(),
-    items: basket.getProducts().map((product: IProduct) => product.id)
+    total: orderProducts.reduce((sum, product) => sum + (product.price || 0), 0),
+    items: orderProducts.map((product: IProduct) => product.id)
   };
   modal.setContent(orderComponent.render(orderData)); // Используем orderComponent
   modal.open();
@@ -102,8 +103,10 @@ events.on('order:nextStep', (data: { address: string, payment: string }) => {
   console.log('Order data received:', data);
   appData.setOrderField('address', data.address);
   appData.setOrderField('payment', data.payment);
-  appData.setOrderField('total', basket.getTotalPrice());
-  appData.setOrderField('items', basket.getProducts().map((product: IProduct) => product.id));
+
+  const orderProducts = basket.getProducts().filter((product: IProduct) => product.price !== null && product.price !== 0);
+  appData.setOrderField('total', orderProducts.reduce((sum, product) => sum + (product.price || 0), 0));
+  appData.setOrderField('items', orderProducts.map((product: IProduct) => product.id));
 
   const contactsForm = cloneTemplate(contactsTemplate);
   const contacts = new Contacts(contactsForm, events);
@@ -112,12 +115,14 @@ events.on('order:nextStep', (data: { address: string, payment: string }) => {
   console.log('Contacts form opened');
 });
 
-events.on('contacts:formSubmit', (formData: { email: string, phone: string }) => {
-  console.log('Form data received:', formData);
-  appData.setContactsField('email', formData.email);
-  appData.setContactsField('phone', formData.phone);
-  
+events.on('contacts:formInput', (formData: { field: keyof IOrderForm, value: string }) => {
+  console.log('Form input received:', formData);
+  appData.setContactsField(formData.field, formData.value);
+});
+
+events.on('contacts:formSubmit', () => {
   const orderData = appData.getOrder();
+  console.log('Form submitted with data:', orderData);
   api.submitOrder(orderData)
     .then(response => {
       console.log('Order submitted successfully:', response);
@@ -135,6 +140,7 @@ events.on('contacts:submitted', (data: IOrder) => {
   modal.setContent(paymentSuccess.render({ total: data.total }));
   modal.open();
   basket.clear();
+  events.emit('basket:cleared'); // Emit event for basket cleared
   console.log('Payment success modal opened');
 });
 
@@ -148,8 +154,7 @@ events.on('payment:successClosed', () => {
   console.log('Payment success modal closed');
 });
 
-const basketButton = ensureElement<HTMLElement>('.header__basket');
-basketButton.addEventListener('click', () => {
+events.on('basket:open', () => {
   modal.setContent(basket.render());
   modal.open();
   console.log('Basket modal opened');

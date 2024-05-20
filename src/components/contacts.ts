@@ -1,6 +1,7 @@
 import { ensureElement } from '../utils/utils';
 import { Component } from './base/component';
 import { IEvents } from './base/events';
+import { IOrderForm } from '../types';
 
 export class Contacts extends Component<null> {
   protected _emailInput: HTMLInputElement;
@@ -20,12 +21,14 @@ export class Contacts extends Component<null> {
       _submitButton: this._submitButton,
     });
 
-    this._emailInput.addEventListener('input', () => this.checkFormValidity());
-    this._phoneInput.addEventListener('input', () => this.checkFormValidity());
-    this._submitButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      this.handleSubmit();
-    });
+    this._emailInput.addEventListener('input', () => this.handleInput('email', this._emailInput.value));
+    this._phoneInput.addEventListener('input', () => this.handleInput('phone', this._phoneInput.value));
+    this._submitButton.addEventListener('click', (event) => this.handleSubmit(event));
+  }
+
+  handleInput(field: keyof IOrderForm, value: string) {
+    this.events.emit('contacts:formInput', { field, value });
+    this.checkFormValidity();
   }
 
   checkFormValidity() {
@@ -34,12 +37,10 @@ export class Contacts extends Component<null> {
     console.log('Contacts form validity checked:', isValid);
   }
 
-  handleSubmit() {
-    const formData = {
-      email: this._emailInput.value,
-      phone: this._phoneInput.value
-    };
-    this.events.emit('contacts:formSubmit', formData);
+  handleSubmit(event: Event) {
+    event.preventDefault();
+    console.log('Contacts form submitted');
+    this.events.emit('contacts:formSubmit');
   }
 
   render(): HTMLElement {
